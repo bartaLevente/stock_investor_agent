@@ -55,10 +55,13 @@ def display_results_in_streamlit(agent):
     
     # Portfolio value chart
     st.subheader("Portfolio Value Over Time")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(portfolio_df['day'], portfolio_df['value'])
-    ax.set_xlabel('Day')
-    ax.set_ylabel('Portfolio Value ($)')
+    fig, ax = plt.subplots(figsize=(8, 4))
+    
+    ax.plot(range(len(portfolio_df)), portfolio_df['value'])
+    ax.set_xticks(range(0, len(portfolio_df), max(1, len(portfolio_df)//10)))
+    
+    ax.set_xlabel("Simulation Day")
+    ax.set_ylabel("Value ($)")
     ax.grid(True)
     st.pyplot(fig)
     

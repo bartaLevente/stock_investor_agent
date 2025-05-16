@@ -16,7 +16,7 @@ import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
 class InvestorAgent:
-    def __init__(self, initial_cash, initial_period='2y', time_step=30):
+    def __init__(self, initial_cash):
         self.initial_cash = initial_cash
         self.cash = initial_cash
         self.portfolio = {}
@@ -24,8 +24,6 @@ class InvestorAgent:
         self.transactions = []
         self.models = {}
         self.scalers = {}
-        self.initial_period = initial_period
-        self.time_step = time_step
 
     def load_model(self, ticker, model_folder = "../models"):
         """
@@ -134,7 +132,6 @@ class InvestorAgent:
             'day': day,
             'value': total_value
         })
-        
         return total_value
 
     def display_results(self):
@@ -172,7 +169,7 @@ def prepare_data(tickers, time_step, end_date):
     
     Args:
         tickers: List of stock tickers
-        time_step: Number of days to look back
+        time_step: Number of days to predict
         end_date: End date for the simulation
     
     Returns:
@@ -180,7 +177,7 @@ def prepare_data(tickers, time_step, end_date):
     """
     price_data = {}
     X_test_data = {}
-    start_date = end_date - timedelta(time_step * 10)
+    start_date = end_date - timedelta(days=365)
     
     for ticker in tickers:
         try:
@@ -194,7 +191,7 @@ def prepare_data(tickers, time_step, end_date):
             X, y = create_dataset(normalized_data, time_step)
 
             # Prepare training and testing data
-            _, X_test, _, prices = prepare_train_test_data(X, y, config.TRAIN_TEST_SPLIT)
+            _, X_test, _, prices = prepare_train_test_data(X, y, time_step)
 
             # Store the most recent time_step days of data
             price_data[ticker] = prices[-time_step:]
@@ -257,11 +254,4 @@ def run_simulation(tickers, days=30, initial_cash=10000):
     
     # Display final results
     agent.display_results()
-    
     return agent
-
-
-if __name__ == "__main__":
-    # Example usage
-    tickers = ["NVDA"]
-    agent = run_simulation(tickers, days=30, initial_cash=10000)
