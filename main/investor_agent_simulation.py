@@ -27,7 +27,7 @@ class InvestorAgent:
         self.initial_period = initial_period
         self.time_step = time_step
 
-    def load_model(self, ticker, model_folder = "models"):
+    def load_model(self, ticker, model_folder = "../models"):
         """
         Load a prediction model for a specific stock ticker.
         If model_path is None, it will use a default path pattern.
@@ -52,6 +52,7 @@ class InvestorAgent:
         """
         current_X_test = tf.expand_dims(X_test_data[ticker][day], axis=0)
         preds = tf.squeeze(self.models[ticker].predict(current_X_test, verbose=0)).numpy()
+
         return preds
 
     def make_decision(self, ticker, current_price, prediction, threshold=0.05):
@@ -95,7 +96,7 @@ class InvestorAgent:
                     'ticker': ticker,
                     'cost': cost,
                     'price': actual_price,
-                    'shares': shares_to_buy 
+                    'shares': shares_to_buy
                 })
                 print(f"Day {day+1}: Bought {shares_to_buy} shares of {ticker} at ${actual_price:.2f}")
 
@@ -262,5 +263,5 @@ def run_simulation(tickers, days=30, initial_cash=10000):
 
 if __name__ == "__main__":
     # Example usage
-    tickers = ["NVDA","AAPL","GOOGL","MSFT","TSLA","AMZN"]
+    tickers = ["NVDA"]
     agent = run_simulation(tickers, days=30, initial_cash=10000)
