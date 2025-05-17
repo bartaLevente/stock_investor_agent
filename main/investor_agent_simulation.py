@@ -36,13 +36,24 @@ class InvestorAgent:
             self.models[ticker] = tf.keras.models.load_model(model_path)
             print(f"Model for {ticker} loaded successfully")
 
+        except Exception as e:
+            print(f"Error loading model for {ticker}: {e}")
+
+    def load_scaler(self, ticker, model_folder = "../models"):
+        """
+        Load a prediction model for a specific stock ticker.
+        If model_path is None, it will use a default path pattern.
+        """
+        try:
             scaler_path = f"{model_folder}/{ticker}_scaler.pkl"
             with open(scaler_path, 'rb') as f:
                 self.scalers[ticker] = pickle.load(f)
             print(f"Scaler for {ticker} loaded successfully")
+            return self.scalers[ticker]
             
         except Exception as e:
-            print(f"Error loading model for {ticker}: {e}")
+            print(f"Error loading scaler for {ticker}: {e}")
+            return None
 
     def get_prediction(self, ticker, day, X_test_data):
         """
@@ -163,7 +174,7 @@ class InvestorAgent:
         print(f"Cash: ${self.cash:.2f}")
 
 
-def prepare_data(tickers, time_step, end_date):
+def prepare_data(tickers, time_step, end_date, scalers):
     """
     Prepare data for simulation.
     
@@ -185,17 +196,17 @@ def prepare_data(tickers, time_step, end_date):
             stock_data = load_stock_data(ticker, start_date, end_date)
             
             # Normalize the data
-            normalized_data, _ = normalize_data(stock_data)
+            normalized_data, _ = normalize_data(stock_data, scalers[ticker])
 
             # Create dataset with time steps
             X, y = create_dataset(normalized_data, time_step)
 
             # Prepare training and testing data
-            _, X_test, _, prices = prepare_train_test_data(X, y, time_step)
+            X_test, prices = prepare_train_test_data(X, y, time_step)
 
             # Store the most recent time_step days of data
-            price_data[ticker] = prices[-time_step:]
-            X_test_data[ticker] = X_test[-time_step:]
+            price_data[ticker] = prices
+            X_test_data[ticker] = X_test
             
         except Exception as e:
             print(f"Error preparing data for {ticker}: {e}")
@@ -218,16 +229,20 @@ def run_simulation(tickers, days=30, initial_cash=10000):
     agent = InvestorAgent(initial_cash)
     
     today = datetime.now().date()
+
+    scalers = {}
     
-    # Prepare historical data for each ticker
-    price_data, X_test_data = prepare_data(tickers, days, today)
-    
-    # Load models for each ticker
+    # Load models and scalers for each ticker
     for ticker in tickers:
         agent.load_model(ticker)
+        scaler = agent.load_scaler(ticker)
+        scalers[ticker] = scaler
+
+    # Prepare historical data for each ticker
+    price_data, X_test_data = prepare_data(tickers, days, today, scalers)
     
     # Run simulation for specified number of days
-    for day in range(0, days):
+    for day in range(0, days+1):
         daily_prices = {}
         
         # Get current prices for each ticker

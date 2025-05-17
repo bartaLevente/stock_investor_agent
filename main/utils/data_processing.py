@@ -51,18 +51,22 @@ def load_stock_data_by_period(ticker_symbol, period):
     
     return data.reset_index(drop=True)
 
-def normalize_data(data):
+def normalize_data(data, scaler = None):
     """
-    Normalize data using MinMaxScaler
+    Normalize data
     
     Args:
         data (pd.DataFrame): Stock data
+        scaler : scaler to scale with
         
     Returns:
         tuple: Normalized data and scaler object
     """
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    normalized_data = scaler.fit_transform(data)
+    if scaler is None:
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        normalized_data = scaler.fit_transform(data)
+    else:
+        normalized_data = scaler.fit_transform(data)
     return normalized_data, scaler
 
 def create_dataset(data, time_step=1):
@@ -93,14 +97,12 @@ def prepare_train_test_data(X, y, test_size):
         test_size (int): Number of samples for testing
         
     Returns:
-        tuple: X_train, X_test, y_train, y_test
+        tuple: X_test, y_test
     """
-    X_train = X[:-test_size]
     X_test = X[-test_size:]
-    y_train = y[:-test_size]
     y_test = y[-test_size:]
     
-    return X_train, X_test, y_train, y_test
+    return X_test, y_test
 
 def inverse_transform_labels(values_to_invert, scaler):
     values_to_invert_squeezed = tf.squeeze(values_to_invert)
